@@ -11,7 +11,7 @@
     Width="500"
     x:DataType="dialogs:DownloadSingleSetupViewModel"
     Loaded="UserControl_OnLoaded">
-    <Grid RowDefinitions="Auto,*,Auto,Auto">
+    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
         <!--  Info  -->
         <StackPanel
             Grid.Row="0"
@@ -103,10 +103,18 @@
                 </DataTemplate>
             </ComboBox.ItemTemplate>
         </ComboBox>
+        
+        <!--  Throttling option  -->
+        <CheckBox
+            Grid.Row="3"
+            Margin="16"
+            IsChecked="{Binding IsThrottlingEnabled}"
+            Content="Enable throttling (automatically adjusts download speed on failures)"
+            ToolTip.Tip="When enabled, downloads will be slowed down if failures occur, then speed up again when downloads succeed. Helps with rate limiting and temporary connection issues." />
 
         <!--  Buttons  -->
         <StackPanel
-            Grid.Row="3"
+            Grid.Row="4"
             Margin="16,8,16,16"
             HorizontalAlignment="Right"
             Orientation="Horizontal">

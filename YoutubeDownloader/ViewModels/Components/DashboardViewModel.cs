@@ -11,6 +11,7 @@ using Gress.Completable;
 using YoutubeDownloader.Core.Downloading;
 using YoutubeDownloader.Core.Resolving;
 using YoutubeDownloader.Core.Tagging;
+using YoutubeDownloader.Core.Utils;
 using YoutubeDownloader.Framework;
 using YoutubeDownloader.Services;
 using YoutubeDownloader.Utils;
@@ -29,6 +30,7 @@ public partial class DashboardViewModel : ViewModelBase
     private readonly DisposableCollector _eventRoot = new();
     private readonly ResizableSemaphore _downloadSemaphore = new();
     private readonly AutoResetProgressMuxer _progressMuxer;
+    private readonly AdaptiveThrottleManager _throttleManager = new();
 
     public DashboardViewModel(
         ViewModelManager viewModelManager,
@@ -99,7 +101,22 @@ public partial class DashboardViewModel : ViewModelBase
             var downloader = new VideoDownloader(_settingsService.LastAuthCookies);
             var tagInjector = new MediaTagInjector();
 
+            // Configure throttling for this download
+            _throttleManager.IsEnabled = download.IsThrottlingEnabled;
+
             using var access = await _downloadSemaphore.AcquireAsync(download.CancellationToken);
+
+            // Apply throttling delay before starting download
+            if (download.IsThrottlingEnabled && _throttleManager.CurrentDelay > TimeSpan.Zero)
+            {
+                download.ThrottleStatus = $"Throttling active - waiting {_throttleManager.CurrentDelay.TotalSeconds:F1}s";
+                await _throttleManager.WaitAsync(download.CancellationToken);
+                download.ThrottleStatus = null;
+            }
+            else
+            {
+                await _throttleManager.WaitAsync(download.CancellationToken);
+            }
 
             download.Status = DownloadStatus.Started;
 
@@ -138,6 +155,12 @@ public partial class DashboardViewModel : ViewModelBase
             }
 
             download.Status = DownloadStatus.Completed;
+
+            // Report success to throttling manager
+            if (download.IsThrottlingEnabled)
+            {
+                _throttleManager.ReportSuccess();
+            }
         }
         catch (Exception ex)
         {
@@ -157,6 +180,12 @@ public partial class DashboardViewModel : ViewModelBase
 
             // Short error message for YouTube-related errors, full for others
             download.ErrorMessage = ex is YoutubeExplodeException ? ex.Message : ex.ToString();
+
+            // Report failure to throttling manager (only for actual failures, not cancellations)
+            if (download.IsThrottlingEnabled && download.Status == DownloadStatus.Failed)
+            {
+                _throttleManager.ReportFailure();
+            }
         }
         finally
         {
@@ -337,6 +366,9 @@ public partial class DashboardViewModel : ViewModelBase
                 download.FilePath!
             );
 
+        // Preserve throttling setting when restarting
+        newDownload.IsThrottlingEnabled = download.IsThrottlingEnabled;
+
         EnqueueDownload(newDownload, position);
     }
 
@@ -365,6 +397,7 @@ public partial class DashboardViewModel : ViewModelBase
 
             _eventRoot.Dispose();
             _downloadSemaphore.Dispose();
+            _throttleManager.Dispose();
         }
 
         base.Dispose(disposing);

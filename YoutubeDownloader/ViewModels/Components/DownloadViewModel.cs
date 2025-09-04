@@ -48,6 +48,12 @@ public partial class DownloadViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(CopyErrorMessageCommand))]
     public partial string? ErrorMessage { get; set; }
 
+    [ObservableProperty]
+    public partial bool IsThrottlingEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial string? ThrottleStatus { get; set; }
+
     public DownloadViewModel(ViewModelManager viewModelManager, DialogManager dialogManager)
     {
         _viewModelManager = viewModelManager;

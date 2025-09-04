@@ -50,6 +50,9 @@ public partial class SettingsService()
     public partial int ParallelLimit { get; set; } = 2;
 
     [ObservableProperty]
+    public partial bool IsThrottlingEnabled { get; set; } = false;
+
+    [ObservableProperty]
     public partial IReadOnlyList<Cookie>? LastAuthCookies { get; set; }
 
     [ObservableProperty]

@@ -31,12 +31,16 @@ public partial class DownloadSingleSetupViewModel(
     [ObservableProperty]
     public partial VideoDownloadOption? SelectedDownloadOption { get; set; }
 
+    [ObservableProperty]
+    public partial bool IsThrottlingEnabled { get; set; }
+
     [RelayCommand]
     private void Initialize()
     {
         SelectedDownloadOption = AvailableDownloadOptions?.FirstOrDefault(o =>
             o.Container == settingsService.LastContainer
         );
+        IsThrottlingEnabled = settingsService.IsThrottlingEnabled;
     }
 
     [RelayCommand]
@@ -72,7 +76,11 @@ public partial class DownloadSingleSetupViewModel(
         await File.WriteAllBytesAsync(filePath, []);
 
         settingsService.LastContainer = container;
+        settingsService.IsThrottlingEnabled = IsThrottlingEnabled;
 
-        Close(viewModelManager.CreateDownloadViewModel(Video, SelectedDownloadOption, filePath));
+        var downloadViewModel = viewModelManager.CreateDownloadViewModel(Video, SelectedDownloadOption, filePath);
+        downloadViewModel.IsThrottlingEnabled = IsThrottlingEnabled;
+
+        Close(downloadViewModel);
     }
 }

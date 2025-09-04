@@ -109,7 +109,8 @@ public partial class DashboardViewModel : ViewModelBase
             // Apply throttling delay before starting download
             if (download.IsThrottlingEnabled && _throttleManager.CurrentDelay > TimeSpan.Zero)
             {
-                download.ThrottleStatus = $"Throttling active - waiting {_throttleManager.CurrentDelay.TotalSeconds:F1}s";
+                download.ThrottleStatus =
+                    $"Throttling active - waiting {_throttleManager.CurrentDelay.TotalSeconds:F1}s";
                 await _throttleManager.WaitAsync(download.CancellationToken);
                 download.ThrottleStatus = null;
             }

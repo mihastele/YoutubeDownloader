@@ -13,7 +13,10 @@ public static class VideoFileValidator
     /// <param name="filePath">Path to the video file</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if the file appears to be valid, false if corrupted or invalid</returns>
-    public static async Task<bool> IsValidVideoFileAsync(string filePath, CancellationToken cancellationToken = default)
+    public static async Task<bool> IsValidVideoFileAsync(
+        string filePath,
+        CancellationToken cancellationToken = default
+    )
     {
         if (!File.Exists(filePath))
             return false;
@@ -57,7 +60,7 @@ public static class VideoFileValidator
             ".webm" => ValidateWebMHeader(buffer),
             ".mp3" => ValidateMp3Header(buffer),
             ".ogg" => ValidateOggHeader(buffer),
-            _ => true // For unknown extensions, assume valid if we can read the file
+            _ => true, // For unknown extensions, assume valid if we can read the file
         };
     }
 
@@ -67,8 +70,12 @@ public static class VideoFileValidator
         // Check for 'ftyp' box which should be near the beginning
         for (int i = 4; i < buffer.Length - 4; i++)
         {
-            if (buffer[i] == 0x66 && buffer[i + 1] == 0x74 &&
-                buffer[i + 2] == 0x79 && buffer[i + 3] == 0x70) // 'ftyp'
+            if (
+                buffer[i] == 0x66
+                && buffer[i + 1] == 0x74
+                && buffer[i + 2] == 0x79
+                && buffer[i + 3] == 0x70
+            ) // 'ftyp'
                 return true;
         }
         return false;
@@ -79,8 +86,7 @@ public static class VideoFileValidator
         // WebM files start with EBML header
         if (buffer.Length >= 4)
         {
-            return buffer[0] == 0x1A && buffer[1] == 0x45 &&
-                   buffer[2] == 0xDF && buffer[3] == 0xA3;
+            return buffer[0] == 0x1A && buffer[1] == 0x45 && buffer[2] == 0xDF && buffer[3] == 0xA3;
         }
         return false;
     }
@@ -106,8 +112,7 @@ public static class VideoFileValidator
         // Ogg files start with 'OggS'
         if (buffer.Length >= 4)
         {
-            return buffer[0] == 0x4F && buffer[1] == 0x67 &&
-                   buffer[2] == 0x67 && buffer[3] == 0x53; // 'OggS'
+            return buffer[0] == 0x4F && buffer[1] == 0x67 && buffer[2] == 0x67 && buffer[3] == 0x53; // 'OggS'
         }
         return false;
     }

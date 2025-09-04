@@ -16,6 +16,7 @@ using YoutubeDownloader.Utils.Extensions;
 using YoutubeDownloader.ViewModels.Components;
 using YoutubeExplode.Videos;
 using YoutubeExplode.Videos.Streams;
+using PathEx = YoutubeDownloader.Utils.PathEx;
 
 namespace YoutubeDownloader.ViewModels.Dialogs;
 

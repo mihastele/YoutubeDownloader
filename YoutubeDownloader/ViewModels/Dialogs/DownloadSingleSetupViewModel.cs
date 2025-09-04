@@ -78,7 +78,11 @@ public partial class DownloadSingleSetupViewModel(
         settingsService.LastContainer = container;
         settingsService.IsThrottlingEnabled = IsThrottlingEnabled;
 
-        var downloadViewModel = viewModelManager.CreateDownloadViewModel(Video, SelectedDownloadOption, filePath);
+        var downloadViewModel = viewModelManager.CreateDownloadViewModel(
+            Video,
+            SelectedDownloadOption,
+            filePath
+        );
         downloadViewModel.IsThrottlingEnabled = IsThrottlingEnabled;
 
         Close(downloadViewModel);

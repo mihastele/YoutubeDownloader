@@ -127,7 +127,9 @@ public class AdaptiveThrottleManager : IDisposable
             var newDelay = TimeSpan.FromMilliseconds(_currentDelay.TotalMilliseconds * 0.75);
             _currentDelay = newDelay < _minDelay ? _minDelay : newDelay;
 
-            Debug.WriteLine($"Throttling reduced to {_currentDelay.TotalSeconds:F1}s after consecutive successes");
+            Debug.WriteLine(
+                $"Throttling reduced to {_currentDelay.TotalSeconds:F1}s after consecutive successes"
+            );
         }
     }
 

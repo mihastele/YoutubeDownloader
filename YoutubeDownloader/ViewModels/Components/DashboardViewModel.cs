@@ -130,14 +130,78 @@ public partial class DashboardViewModel : ViewModelBase
                     download.CancellationToken
                 );
 
-            await downloader.DownloadVideoAsync(
-                download.FilePath!,
-                download.Video!,
-                downloadOption,
-                _settingsService.ShouldInjectSubtitles,
-                download.Progress.Merge(progress),
-                download.CancellationToken
-            );
+            // Download with retries and post-download validation.
+            var ok = await DownloadRetryHelper
+                .TryDownloadWithRetriesAsync(
+                    async ct =>
+                    {
+                        try
+                        {
+                            await downloader.DownloadVideoAsync(
+                                download.FilePath!,
+                                download.Video!,
+                                downloadOption,
+                                _settingsService.ShouldInjectSubtitles,
+                                download.Progress.Merge(progress),
+                                ct
+                            );
+
+                            return true;
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // Propagate cancellation so helper and outer catch can handle it
+                            throw;
+                        }
+                        catch
+                        {
+                            // Treat other exceptions as transient failures to allow retries
+                            return false;
+                        }
+                    },
+                    download.CancellationToken,
+                    immediateRetries: 2,
+                    maxRetries: 8,
+                    enableThrottling: download.IsThrottlingEnabled,
+                    onBackoff: delay =>
+                    {
+                        try
+                        {
+                            download.ThrottleStatus = $"Retrying in {delay.TotalSeconds:F1}s";
+                        }
+                        catch { }
+                    },
+                    validateDownloadedFunc: async ct =>
+                    {
+                        if (string.IsNullOrWhiteSpace(download.FilePath))
+                            return false;
+                        return await VideoFileValidator.IsValidVideoFileAsync(
+                            download.FilePath!,
+                            ct
+                        );
+                    },
+                    onValidationFailed: () =>
+                    {
+                        try
+                        {
+                            if (
+                                !string.IsNullOrWhiteSpace(download.FilePath)
+                                && File.Exists(download.FilePath)
+                            )
+                                File.Delete(download.FilePath);
+                            download.ThrottleStatus =
+                                "Downloaded file failed validation, retrying...";
+                        }
+                        catch { }
+                    }
+                )
+                .ConfigureAwait(false);
+
+            // Clear throttle status after attempts
+            download.ThrottleStatus = null;
+
+            if (!ok)
+                throw new Exception("Download failed after retries");
 
             if (_settingsService.ShouldInjectTags)
             {

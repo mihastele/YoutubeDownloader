@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace YoutubeDownloader.Core.Utils;
 
@@ -12,6 +13,8 @@ namespace YoutubeDownloader.Core.Utils;
 /// </summary>
 public static class DownloadRetryHelper
 {
+    private static HashSet<string> downloadedVideos = new HashSet<string>();
+
     /// <summary>
     /// Tries to run downloadFunc until success, cancellation, or maxRetries reached.
     /// downloadFunc should return true on success, false on transient failure.
@@ -130,5 +133,19 @@ public static class DownloadRetryHelper
         }
 
         return false;
+    }
+
+    public static bool TryDownload(string videoId)
+    {
+        // Check if the video has already been downloaded
+        if (downloadedVideos.Contains(videoId))
+        {
+            return false; // Skip downloading
+        }
+
+        // Proceed with the download logic...
+        // After successful download, add to the list
+        downloadedVideos.Add(videoId);
+        return true; // Indicate success
     }
 }

@@ -1,0 +1,17 @@
+{
+  "name": "youtubenode",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "fluent-ffmpeg": "^2.1.3",
+    "fs-extra": "^11.3.1",
+    "yt-dlp-exec": "^1.0.2"
+  }
+}
